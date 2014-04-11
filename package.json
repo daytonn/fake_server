@@ -1,0 +1,36 @@
+{
+  "name": "fake_server",
+  "version": "1.0.0",
+  "description": "A plugin for sinon.js that let's you define routes to server specific json data",
+  "main": "fake_server.js",
+  "scripts": {
+    "test": "gulp spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:daytonn/fake_server.git"
+  },
+  "keywords": [
+    "sinon",
+    "testing",
+    "api",
+    "stubs"
+  ],
+  "author": "Dayton Nolan",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/daytonn/fake_server/issues"
+  },
+  "homepage": "https://github.com/daytonn/fake_server",
+  "devDependencies": {
+    "gulp": "~3.6.0",
+    "gulp-sass": "~0.7.1",
+    "gulp-util": "~2.2.14",
+    "gulp-uglify": "~0.2.1",
+    "gulp-concat": "~2.2.0",
+    "gulp-define-module": "~0.1.0",
+    "gulp-handlebars": "~2.0.0",
+    "gulp-declare": "~0.2.0",
+    "connect": "~2.14.4"
+  }
+}

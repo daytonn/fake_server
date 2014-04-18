@@ -76,9 +76,13 @@
     },
 
     handleRequest: function(request) {
-      setTimeout(function() {
+      if (this.responseTime) {
+        setTimeout(function() {
+          FakeServer.respond(request);
+        }, this.responseTime);
+      } else {
         FakeServer.respond(request);
-      }, this.responseTime);
+      }
     },
 
     respond: function(request) {

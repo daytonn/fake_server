@@ -6,6 +6,7 @@ describe("FakeServer", function() {
   var request;
   var verb;
   beforeEach(function() {
+    FakeServer.responseTime = 0;
     subject = FakeServer;
     verb = "get";
   });

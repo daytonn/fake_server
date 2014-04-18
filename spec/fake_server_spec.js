@@ -14,16 +14,16 @@ describe("FakeServer", function() {
     expect(subject.xhr).toBeDefined();
   });
 
-  it("has requests", function() {
-    expect(subject.requests).toBeArray();
-  });
-
   it("has JSON headers", function() {
     expect(subject.JSONHeaders).toEqual({ "Content-Type": "application/json" });
   });
 
   it("has Not Found headers", function() {
     expect(subject.NotFoundHeaders).toEqual({ "Content-Type": "text/plain" });
+  });
+
+  it("has a responseTime", function() {
+    expect(subject.responseTime).toBeNumber();
   });
 
   it("has routes", function() {
@@ -108,10 +108,6 @@ describe("FakeServer", function() {
       subject.handleRequest(request);
     });
 
-    it("adds the xhr to the requests", function() {
-      expect(subject.requests[0]).toEqual(request);
-    });
-
     it("handles the request", function() {
       expect(subject.respond).toHaveBeenCalled();
     });
@@ -149,6 +145,49 @@ describe("FakeServer", function() {
     });
   });
 
+  describe("parseResponseArguments", function() {
+    it("parses number strings in an array", function() {
+      expect(subject.parseResponseArguments(["1", "something", "45"])).toEqual([1, "something", 45]);
+    });
+  });
+
+  describe("getRoutePayload", function() {
+    beforeEach(function() {
+      url = {
+        path: "/test"
+      };
+      subject.route(verb, url.path, "payload");
+    });
+
+    it("gets the route payload if the url matches", function() {
+      expect(subject.getRoutePayload(verb, url)).toEqual("payload");
+    });
+  });
+
+  describe("responseArguments", function() {
+    beforeEach(function() {
+      path = "/one/:two/three/:four";
+      url = {
+        path: "/one/1/three/something",
+        query: "?key=value&anotherKey=anotherValue",
+        params: {
+          key: "value",
+          anotherKey: "anotherValue"
+        }
+      };
+      subject.createRouteMatcher(verb, path);
+    });
+
+    it("creates an array of values that match dynamic segments", function() {
+      expect(subject.responseArguments(verb, url)[0]).toEqual(1);
+      expect(subject.responseArguments(verb, url)[1]).toEqual("something");
+    });
+
+    it("adds the params to the end of the array", function() {
+      expect(subject.responseArguments(verb, url)[2]).toEqual(url.params);
+    });
+  });
+
   describe("responsePayload", function() {
     describe("value route", function() {
       beforeEach(function() {
@@ -165,39 +204,39 @@ describe("FakeServer", function() {
       });
     });
 
-    // describe("function route", function() {
-    //   beforeEach(function() {
-    //     path = "/function";
-    //     payload = function() {
-    //       return "payload";
-    //     };
-    //     url = {
-    //       path: path
-    //     };
-    //     subject.route(verb, path, payload);
-    //   });
+    describe("function route", function() {
+      beforeEach(function() {
+        path = "/function";
+        payload = function() {
+          return "payload";
+        };
+        url = {
+          path: path
+        };
+        subject.route(verb, path, payload);
+      });
 
-    //   it("returns the return value of the function", function() {
-    //     expect(subject.responsePayload(verb, url)).toEqual(payload());
-    //   });
+      it("returns the return value of the function", function() {
+        expect(subject.responsePayload(verb, url)).toEqual(payload());
+      });
 
-    //   describe("dynamic segments", function() {
-    //     beforeEach(function() {
-    //       path = "/dynamic/:value/:numeric";
-    //       payload = function(value, numeric) {
-    //         return { value: value, numeric: numeric };
-    //       };
-    //       url = {
-    //         path: "/dynamic/test/12"
-    //       };
-    //       subject.route(verb, path, payload);
-    //     });
+      describe("dynamic segments", function() {
+        beforeEach(function() {
+          path = "/dynamic/:value/:numeric";
+          payload = function(value, numeric) {
+            return { value: value, numeric: numeric };
+          };
+          url = {
+            path: "/dynamic/test/12"
+          };
+          subject.route(verb, path, payload);
+        });
 
-    //     it("passes the dynamic segments to the route function, parsing numbers", function() {
-    //       expect(subject.responsePayload(verb, url)).toEqual({ value: "test", numeric: 12 });
-    //     });
-    //   });
-    // });
+        it("passes the dynamic segments to the route function, parsing numbers", function() {
+          expect(subject.responsePayload(verb, url)).toEqual({ value: "test", numeric: 12 });
+        });
+      });
+    });
   });
 
   describe("hasRoute", function() {
@@ -225,14 +264,12 @@ describe("FakeServer", function() {
 
     describe("when the url matches a route", function() {
       beforeEach(function() {
-        subject.requests.length = 0;
-        subject.requests.push({
+        request = {
           respond: jasmine.createSpy(),
           url: path,
           method: "GET"
-        });
-        request = subject.requests[0];
-        subject.respond(0);
+        };
+        subject.respond(request);
       });
 
       it("responds to the request with the payload", function() {
@@ -242,14 +279,12 @@ describe("FakeServer", function() {
 
     describe("when the url does not match a route", function() {
       beforeEach(function() {
-        subject.requests.length = 0;
-        subject.requests.push({
+        request = {
           respond: jasmine.createSpy(),
           url: "/not-found",
           method: "GET"
-        });
-        request = subject.requests[0];
-        subject.respond(0);
+        };
+        subject.respond(request);
       });
 
       it("responds to the request with the payload", function() {

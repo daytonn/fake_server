@@ -15,6 +15,14 @@
 
   if (Array.prototype.forEach && !Array.prototype.each) {
     Array.prototype.each = Array.prototype.forEach;
+  } else {
+    Array.prototype.each = function(iterator) {
+      if (this.length) {
+        for (var item in this) {
+          return iterator(item);
+        }
+      }
+    };
   }
 
   if (!Object.prototype.each) {
@@ -27,7 +35,7 @@
 
   (global.FakeServer = {
     xhr: sinon.useFakeXMLHttpRequest(),
-    requests: [],
+    responseTime: 1,
     JSONHeaders: { "Content-Type": "application/json" },
     NotFoundHeaders: { "Content-Type": "text/plain" },
     routes: {
@@ -68,15 +76,13 @@
     },
 
     handleRequest: function(request) {
-      this.requests.push(request);
-      var index = this.requests.indexOf(request);
       setTimeout(function() {
-        FakeServer.respond(index);
-      }, 1);
+        FakeServer.respond(request);
+      }, this.responseTime);
     },
 
-    respond: function(index) {
-      var request = this.requests[index];
+    respond: function(request) {
+      if (!request) return;
       var verb = request.method.toLowerCase();
       var url = this.parseUrl(request.url);
 
@@ -90,35 +96,38 @@
     hasRoute: function(verb, url) {
       var hasRoute;
       this.routeMatchers[verb].each(function(matcher, key) {
-        if (matcher.test(url.path)) {
-          hasRoute = true;
-          return false;
-        }
+        return !(hasRoute = matcher.test(url.path));
       });
       return !!hasRoute;
     },
 
     responsePayload: function(verb, url) {
-      var route;
-      var pattern;
+      var routePayload = this.getRoutePayload(verb, url);
+      return isFunction(routePayload) ? routePayload.apply(null, this.responseArguments(verb, url)) : routePayload;
+    },
 
+    getRoutePayload: function(verb, url) {
+      var route;
       this.routeMatchers[verb].each(function(matcher, key) {
-        if (matcher.test(url.path)) {
-          route = global.FakeServer.routes[verb][key];
-          pattern = matcher;
-          return false;
-        }
+        if (matcher.test(url.path)) return !!(route = global.FakeServer.routes[verb][key]);
       });
-      // debugger
-      if (isFunction(route)) {
-        var args = url.path.match(pattern).rest();
-        args = args.map(function(arg) {
-          return /[0-9]+/.test(arg) ? parseInt(arg, 10) : arg;
-        });
-        return route.apply(null, args);
-      } else {
-        return route;
-      }
+      return route;
+    },
+
+    responseArguments: function(verb, url) {
+      var args;
+      this.routeMatchers[verb].each(function(matcher, key) {
+        if (matcher.test(url.path)) return !!(args = url.path.match(matcher).slice(1));
+      });
+      args = this.parseResponseArguments(args);
+      args.push(url.params);
+      return args;
+    },
+
+    parseResponseArguments: function(args) {
+      return args.map(function(arg) {
+        return /[0-9]+/.test(arg) ? parseInt(arg, 10) : arg;
+      });
     },
 
     parseUrl: function(url) {

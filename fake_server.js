@@ -35,7 +35,7 @@
 
   (global.FakeServer = {
     xhr: sinon.useFakeXMLHttpRequest(),
-    responseTime: 1,
+    responseTime: 0,
     JSONHeaders: { "Content-Type": "application/json" },
     NotFoundHeaders: { "Content-Type": "text/plain" },
     routes: {

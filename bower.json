@@ -1,0 +1,23 @@
+{
+  "name": "fake_server",
+  "main": "fake_server.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/daytonn/fake_server",
+  "authors": [
+    "Dayton Nolan <daytonn@gmail.com>"
+  ],
+  "description": "A plugin for sinon.js that let's you define routes that will automatically return specified JSON payloads",
+  "keywords": [
+    "sinon",
+    "mock",
+    "api"
+  ],
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
